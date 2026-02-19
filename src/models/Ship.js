@@ -7,12 +7,15 @@ export class Ship {
   }
 
   hit = () => {
-    if (this.hits === this.length) return this.hits;
-    return ++this.hits;
+    if (this.sunk) return;
+
+    this.hits++;
+    if (this.hits === this.length) {
+      this.sunk = true;
+    }
   };
 
   isSunk = () => {
-    this.sunk = true;
     return this.sunk;
   };
 }
