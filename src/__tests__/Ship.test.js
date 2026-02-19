@@ -5,7 +5,10 @@ describe("Ship", () => {
   const carrier = new Ship("carrier", len);
 
   it("should record hits correctly", () => {
-    expect(carrier.hit()).toBe(1);
+    carrier.hit();
+    expect(carrier.hits).toBe(1);
+    carrier.hit();
+    expect(carrier.hits).toBe(2);
   });
 
   it("should sink when hits is equal to length", () => {
