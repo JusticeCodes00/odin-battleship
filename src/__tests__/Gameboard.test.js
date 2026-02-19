@@ -33,8 +33,8 @@ describe("Gameboard", () => {
     board = new Gameboard();
   });
 
-  it("should place ships at specific coordinates", () => {
-    let ship = {
+  it("should place ship on a row", () => {
+    const ship = {
       name: "carrier",
       direction: "row",
       x: rows[1],
@@ -43,23 +43,25 @@ describe("Gameboard", () => {
 
     board.placeShip(ship);
 
-    expect(board.getBoard()[1][cols["A"]].name).toBe("carrier");
-    expect(board.getBoard()[1][cols["B"]].name).toBe("carrier");
-    expect(board.getBoard()[1][cols["C"]].name).toBe("carrier");
-    expect(board.getBoard()[1][cols["D"]].name).toBe("carrier");
-    expect(board.getBoard()[1][cols["E"]].name).toBe("carrier");
+    expect(board.getBoard()[ship.x][cols["A"]][0].name).toBe("carrier");
+    expect(board.getBoard()[ship.x][cols["B"]][0].name).toBe("carrier");
+    expect(board.getBoard()[ship.x][cols["C"]][0].name).toBe("carrier");
+    expect(board.getBoard()[ship.x][cols["D"]][0].name).toBe("carrier");
+    expect(board.getBoard()[ship.x][cols["E"]][0].name).toBe("carrier");
+  });
 
-    ship = {
+  it("should place ship on a column", () => {
+    const ship = {
       name: "destroyer",
       direction: "col",
-      y: cols["A"],
       x: rows[2],
+      y: cols["A"],
     };
 
     board.placeShip(ship);
 
-    expect(board.getBoard()[2][cols["A"]].name).toBe("destroyer");
-    expect(board.getBoard()[3][cols["A"]].name).toBe("destroyer");
+    expect(board.getBoard()[rows[2]][ship.y][0].name).toBe("destroyer");
+    expect(board.getBoard()[rows[3]][ship.y][0].name).toBe("destroyer");
   });
 
   it("should receive a hit", () => {
@@ -76,10 +78,9 @@ describe("Gameboard", () => {
 
     expect(board.receiveAttack(attack)).toBe("hit");
 
-    expect(board.getBoard()[attack.x][attack.y].getHits()).toContainEqual([
-      attack.x,
-      attack.y,
-    ]);
+    expect(board.getHits()).toContain(`${attack.x},${attack.y}`);
+
+    expect(board.getBoard()[ship.x][ship.y][0].hits).toBe(1);
   });
 
   it("should record a miss", () => {
@@ -87,7 +88,7 @@ describe("Gameboard", () => {
 
     expect(board.receiveAttack(attack)).toBe("miss");
 
-    expect(board.getMissedAttacks()).toContainEqual([attack.x, attack.y]);
+    expect(board.getMissedAttacks()).toContain(`${attack.x},${attack.y}`);
   });
 
   it("should be able to report whether or not all of their ships have been sunk.", () => {
@@ -140,9 +141,9 @@ describe("Gameboard", () => {
     ships.forEach((ship) => {
       for (let i = 0; i < ship.len; i++) {
         if (ship.direction === "col") {
-          board.receiveAttack(ship.x + i, ship.y);
+          board.receiveAttack({ x: ship.x + i, y: ship.y });
         } else if (ship.direction === "row") {
-          board.receiveAttack(ship.x, ship.y + i);
+          board.receiveAttack({ x: ship.x, y: ship.y + i });
         }
       }
     });
