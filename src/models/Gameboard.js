@@ -3,6 +3,15 @@ import { Ship } from "../models/Ship.js";
 export class Gameboard {
   static GRID_COLUMN_LENGTH = 10;
   static GRID_ROW_LENGTH = Gameboard.GRID_COLUMN_LENGTH;
+  static VALID_SHIPS = [
+    "carrier",
+    "battleship",
+    "cruiser",
+    "submarine",
+    "destroyer",
+  ];
+
+  static VALID_DIRECTIONS = ["row", "col"];
 
   constructor() {
     this.oceanGridBoard = this.createGrid();
@@ -37,14 +46,37 @@ export class Gameboard {
     return grid;
   };
 
-  placeShip = ({ name, direction, x, y }) => {
+  placeShip = ({ name, direction, x, y } = {}) => {
+    if (!Gameboard.VALID_SHIPS.includes(name))
+      throw new Error(`Invalid ship name: ${name}`);
+
+    if (!Gameboard.VALID_DIRECTIONS.includes(direction))
+      throw new Error(`Invalid direction: ${direction}`);
+
+    this.#checkOutOfBounds(x, y);
     // Loop according to the length of the ship specified and place ship
+
     for (let i = 0; i < this.ships[name].length; i++) {
-      if (direction === "row")
+      if (direction === "row") {
+        this.#checkOverlap(x, y + i);
         this.oceanGridBoard[x][y + i].push(this.ships[name]);
-      if (direction === "col")
+      }
+
+      if (direction === "col") {
+        this.#checkOverlap(x + i, y);
         this.oceanGridBoard[x + i][y].push(this.ships[name]);
+      }
     }
+  };
+
+  #checkOutOfBounds = (x, y) => {
+    if (x < 0 || y < 0 || x >= 10 || y >= 10)
+      throw new RangeError("Ship placement out of bounds.");
+  };
+
+  #checkOverlap = (x, y) => {
+    if (this.oceanGridBoard[x][y][0])
+      throw new RangeError("Ship overlaps with another ship.");
   };
 
   getBoard = () => {

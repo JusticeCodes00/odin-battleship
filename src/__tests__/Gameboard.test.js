@@ -64,6 +64,92 @@ describe("Gameboard", () => {
     expect(board.getBoard()[rows[3]][ship.y][0].name).toBe("destroyer");
   });
 
+  it("should throw if player provides coordinates less than zero", () => {
+    const ship = {
+      name: "carrier",
+      direction: "row",
+      x: -1,
+      y: -1,
+    };
+
+    expect(() => board.placeShip(ship)).toThrow(
+      "Ship placement out of bounds.",
+    );
+
+    ship.direction = "col";
+
+    expect(() => board.placeShip(ship)).toThrow(
+      "Ship placement out of bounds.",
+    );
+  });
+
+  it("should throw if player provides coordinates greater than or equal to 10", () => {
+    const ship = {
+      name: "carrier",
+      direction: "row",
+      x: 10,
+      y: 10,
+    };
+
+    expect(() => board.placeShip(ship)).toThrow(
+      "Ship placement out of bounds.",
+    );
+
+    ship.describe = "col";
+
+    expect(() => board.placeShip(ship)).toThrow(
+      "Ship placement out of bounds.",
+    );
+  });
+
+  it("should throw when an invalid ship name is provided", () => {
+    const ship = {
+      name: "wrong name",
+      direction: "row",
+      x: 0,
+      y: 0,
+    };
+
+    expect(() => board.placeShip(ship)).toThrow(
+      `Invalid ship name: ${ship.name}`,
+    );
+  });
+
+  it("should throw when an invalid direction is provided", () => {
+    const ship = {
+      name: "battleship",
+      direction: "bad direction",
+      x: 0,
+      y: 0,
+    };
+
+    expect(() => board.placeShip(ship)).toThrow(
+      `Invalid direction: ${ship.direction}`,
+    );
+  });
+
+  it("should throw if player provided coordinate will cause an overlap", () => {
+    const ship = {
+      name: "destroyer",
+      direction: "row",
+      x: rows[2],
+      y: cols["I"],
+    };
+
+    board.placeShip(ship);
+
+    expect(() => board.placeShip(ship)).toThrow(
+      "Ship overlaps with another ship.",
+    );
+
+    ship.direction = "col";
+    ship.x = rows[1];
+
+    expect(() => board.placeShip(ship)).toThrow(
+      "Ship overlaps with another ship.",
+    );
+  });
+
   it("should receive a hit", () => {
     const attack = { x: rows[1], y: cols["A"] };
 
@@ -91,7 +177,7 @@ describe("Gameboard", () => {
     expect(board.getMissedAttacks()).toContain(`${attack.x},${attack.y}`);
   });
 
-  it("should be able to report whether or not all of their ships have been sunk.", () => {
+  it("should be able to report whether or not all of it's ships have been sunk.", () => {
     const destroyer = {
       name: "destroyer",
       direction: "col",
