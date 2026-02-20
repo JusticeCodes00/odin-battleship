@@ -5,8 +5,8 @@
   "scripts": {
     "prepare": "husky",
     "test": "jest",
-    "test:onlyChanged": "jest --watch --onlyChanged",
-    "test:watch": "jest --watch",
+    "test:onlyChanged": "jest --watch --verbose --onlyChanged",
+    "test:watch": "jest --watch --verbose",
     "clean": "rm dist -r",
     "build": "webpack --config webpack.prod.js",
     "dev": "webpack serve --config webpack.dev.js",
