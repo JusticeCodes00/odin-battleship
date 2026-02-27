@@ -7,7 +7,12 @@ import json from "@eslint/json";
 import markdown from "@eslint/markdown";
 
 export default defineConfig([
-  globalIgnores(["node_modules/", "package-lock.json", "coverage"]),
+  globalIgnores([
+    "node_modules/",
+    "package-lock.json",
+    "coverage",
+    "src/__tests__/",
+  ]),
   {
     files: ["**/*.{js,mjs,cjs}"],
     plugins: { js },
@@ -16,19 +21,19 @@ export default defineConfig([
       globals: { ...globals.browser, ...globals.node, ...globals.jest },
     },
     rules: {
-      camelcase: "warn",
-      "capitalized-comments": "warn",
-      eqeqeq: ["warn", "smart"],
-      "no-alert": "warn",
-      "no-console": "warn",
-      "no-var": "warn",
-      "no-useless-rename": "warn",
-      "no-useless-return": "warn",
-      "no-warning-comments": "warn",
-      "operator-assignment": ["warn", "always"],
-      "prefer-const": "warn",
-      "sort-imports": "warn",
-      yoda: "warn",
+      camelcase: "error",
+      "capitalized-comments": "error",
+      eqeqeq: ["error", "smart"],
+      "no-alert": "error",
+      "no-console": "error",
+      "no-var": "error",
+      "no-useless-rename": "error",
+      "no-useless-return": "error",
+      "no-warning-comments": "error",
+      "operator-assignment": ["error", "always"],
+      "prefer-const": "error",
+      "sort-imports": "error",
+      yoda: "error",
     },
   },
   {
