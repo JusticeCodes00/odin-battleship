@@ -1,0 +1,207 @@
+@font-face {
+  font-family: "share tech mono";
+  src:
+    url("./assets/fonts/sharetechmono-regular-webfont.woff2") format("woff2"),
+    url("./assets/fonts/sharetechmono-regular-webfont.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+}
+
+:root {
+  --color-base-text: #f6f5f4;
+  --color-base-bg: #241f31;
+  --color-state-game-text: #f8e45c;
+
+  --color-header-title-text: #1c71d8;
+
+  --boarder-board: 1px solid #1a5fb4;
+
+  --color-fade-text: #9a9996;
+
+  --space-xms: 0.2rem;
+  --space-sm: 0.5rem;
+  --space-md: 1.5rem;
+
+  --bg-ship-base-gradient: linear-gradient(to top, #f5c211, #f8e45c);
+  --bg-ship-hit-gradient: linear-gradient(to top, #f66151, #a51d2d);
+  --bg-ship-miss-gradient: linear-gradient(to top, #ffffff, #9a9996);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+body {
+  font-family: "share tech mono", monospace;
+  line-height: 1.5;
+  color: var(--color-base-text);
+  font-size: clamp(1rem, 0.5rem + 1vw, 1.1rem);
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+
+  min-height: 100vh;
+  background: var(--color-base-bg);
+
+  padding: 1.5rem;
+}
+
+.header {
+  position: sticky;
+  top: 1rem;
+  background-color: var(--color-base-bg);
+  padding: var(--space-md);
+  display: flex;
+  gap: var(--space-md);
+  flex-direction: column;
+  justify-content: center;
+
+  z-index: 1;
+}
+
+.mini-dashboard {
+  align-self: flex-start;
+}
+
+.game-title {
+  font-size: calc(2rem + 0.5vw);
+}
+/* TODO: Remove */
+/* .header,
+.main,
+.footer {
+  border: 1px solid #000;
+} */
+
+.header h1 {
+  color: var(--color-header-title-text);
+  letter-spacing: 5px;
+  text-transform: uppercase;
+}
+
+.main {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6rem;
+  padding: var(--space-md) var(--space-sm);
+}
+
+.main section {
+  /* TODO: Remove */
+  /* border: 1px solid #000; */
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  p {
+    color: var(--color-fade-text);
+    padding: 0.5rem;
+  }
+}
+
+.ships-wrapper {
+  margin-top: var(--space-sm);
+  padding: var(--space-xms);
+  display: flex;
+  gap: var(--space-xms);
+  rotate: 90deg;
+  scale: -100%;
+  border: 2px dotted #c64600;
+  border-radius: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.ship-map {
+  border: 1px solid #1c71d8;
+}
+
+.ships-wrapper div div {
+  width: 20px;
+  height: 20px;
+  border: 1px solid #1c71d8;
+}
+
+.board-wrapper {
+  display: grid;
+  grid-template-columns: 30px 1fr;
+  grid-template-rows: 30px 1fr;
+
+  justify-self: center;
+}
+
+.label {
+  display: grid;
+  justify-items: center;
+}
+
+.label-cols {
+  grid-column: 2/-1;
+  grid-auto-flow: column;
+}
+.label-rows {
+  grid-row: 2/-1;
+}
+
+.board {
+  border: var(--boarder-board);
+  background-color: #1a5fb442;
+  border-radius: 0.3rem;
+
+  display: grid;
+  grid-template-columns: repeat(10, minmax(25px, 30px));
+  grid-template-rows: repeat(10, 28px);
+}
+
+.enemy-board .ship {
+  background: transparent;
+}
+
+.fade {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cell {
+  border: 1px solid red;
+  width: 100%;
+  height: 100%;
+
+  border: var(--boarder-board);
+}
+
+.ship {
+  background: var(--bg-ship-base-gradient);
+}
+
+.main section:last-child {
+  /* scale: 0.4; */
+}
+
+.hit {
+  background: var(--bg-ship-hit-gradient);
+}
+
+.enemy-board .hit {
+  background: var(--bg-ship-hit-gradient);
+}
+
+.miss {
+  background: var(--bg-ship-miss-gradient);
+}
+
+.game-state {
+  box-shadow: 0 0 5px 2px #114c93;
+  padding: var(--space-xms) var(--space-sm);
+  span {
+    padding: var(--space-sm);
+    color: var(--color-state-game-text);
+  }
+}

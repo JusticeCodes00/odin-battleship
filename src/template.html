@@ -1,11 +1,101 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Asset Management</title>
-</head>
-<body>
-    
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BattleShip - The Odin Project</title>
+  </head>
+  <body>
+    <div class="app">
+      <header class="header">
+        <h1 class="game-title">BattleShip</h1>
+        <div class="mini-dashboard">
+          <div class="game-state">
+            Game state:
+            <span data-game-state-text>Place your ships to begin</span>
+          </div>
+        </div>
+      </header>
+
+      <main class="main">
+        <section class="fade">
+          <details open>
+            <summary>Fleet Grid</summary>
+            <div data-your-fleet-map class="ships-wrapper"></div>
+          </details>
+          <div class="board-wrapper">
+            <div class="label label-cols">
+              <span>A</span>
+              <span>B</span>
+              <span>C</span>
+              <span>D</span>
+              <span>E</span>
+              <span>F</span>
+              <span>G</span>
+              <span>H</span>
+              <span>I</span>
+              <span>J</span>
+            </div>
+
+            <div class="label label-rows">
+              <span>1</span>
+              <span>2</span>
+              <span>3</span>
+              <span>4</span>
+              <span>5</span>
+              <span>6</span>
+              <span>7</span>
+              <span>8</span>
+              <span>9</span>
+              <span>10</span>
+            </div>
+
+            <div data-real-board class="board real-board"></div>
+          </div>
+
+          <p>Your Grid</p>
+        </section>
+
+        <section>
+          <details open>
+            <summary>Fleet Grid</summary>
+            <div data-enemy-fleet-map class="ships-wrapper"></div>
+          </details>
+
+          <div class="board-wrapper">
+            <div class="label label-cols">
+              <span>A</span>
+              <span>B</span>
+              <span>C</span>
+              <span>D</span>
+              <span>E</span>
+              <span>F</span>
+              <span>G</span>
+              <span>H</span>
+              <span>I</span>
+              <span>J</span>
+            </div>
+
+            <div class="label label-rows">
+              <span>1</span>
+              <span>2</span>
+              <span>3</span>
+              <span>4</span>
+              <span>5</span>
+              <span>6</span>
+              <span>7</span>
+              <span>8</span>
+              <span>9</span>
+              <span>10</span>
+            </div>
+
+            <div data-enemy-board class="board enemy-board"></div>
+          </div>
+
+          <p>Opponent's Grid</p>
+        </section>
+      </main>
+      <footer class="footer"></footer>
+    </div>
+  </body>
 </html>
