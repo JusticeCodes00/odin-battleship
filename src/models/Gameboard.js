@@ -48,18 +48,16 @@ export class Gameboard {
   place = (name, direction, x, y) => {
     this.#validateShipInfo(name, direction, x, y);
 
-    this.#checkOutOfBounds(x, y);
-
+    // Validate ALL coordinates first before touching the board
     for (let i = 0; i < this.ships[name].length; i++) {
-      if (direction === "row") {
-        this.#checkOverlap(x, y + i);
-        this.#board[x][y + i].push(this.ships[name]);
-      }
+      if (direction === "row") this.#checkOverlap(x, y + i);
+      if (direction === "col") this.#checkOverlap(x + i, y);
+    }
 
-      if (direction === "col") {
-        this.#checkOverlap(x + i, y);
-        this.#board[x + i][y].push(this.ships[name]);
-      }
+    // Only place if everything passed
+    for (let i = 0; i < this.ships[name].length; i++) {
+      if (direction === "row") this.#board[x][y + i].push(this.ships[name]);
+      if (direction === "col") this.#board[x + i][y].push(this.ships[name]);
     }
   };
 
@@ -67,6 +65,10 @@ export class Gameboard {
     this.#validateShipName(name);
     this.#validateShipDirection(direction);
     this.#checkOutOfBounds(x, y);
+
+    const length = this.ships[name].length;
+    if (direction === "row") this.#checkOutOfBounds(x, y + length - 1);
+    if (direction === "col") this.#checkOutOfBounds(x + length - 1, y);
   };
 
   #validateShipDirection = (direction) => {
@@ -117,6 +119,18 @@ export class Gameboard {
 
   allSunk = () => {
     return Object.values(this.ships).every((ship) => ship.isSunk());
+  };
+
+  clear = () => {
+    this.#board = this.createBoard();
+    this.#misses = new Set();
+    this.#hits = new Set();
+    this.ships = Object.fromEntries(
+      Object.values(Gameboard.VALID_SHIPS).map(([name, length]) => [
+        name,
+        new Ship(name, length),
+      ]),
+    );
   };
 }
 

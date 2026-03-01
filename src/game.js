@@ -2,16 +2,15 @@ import { renderBoard, renderMiniGrid } from "./ui.js";
 import { Gameboard } from "./models/Gameboard.js";
 import { Player } from "./models/Player.js";
 import { Ship } from "./models/Ship.js";
-import interact from "interactjs";
 
 const playTurn = (x, y) => {
-  if (store.gameOver) return;
+  if (states.gameOver) return;
 
   const enemy = getEnemyPlayer();
 
   // Prevent human from attacking same coordinate twice
   if (checkHasAttackedCoordinateBefore(enemy, x, y)) {
-    store.stateMessage = "Already attacked that spot";
+    states.stateMessage = "Already attacked that spot";
     return;
   }
 
@@ -29,30 +28,30 @@ const playTurn = (x, y) => {
 
   const winner = playerOne.gameboard.allSunk() || playerTwo.gameboard.allSunk();
 
-  if (winner) handleGameOver();
+  if (winner) showOverPopover();
 
   switchPlayerTurn();
 
-  if (store.currentPlayer.type === "computer") runPCTurn();
+  if (states.currentPlayer.type === "computer") runPCTurn();
 };
 
-const handleGameOver = () => {
-  store.gameOver = true;
-  store.stateMessage = "Game Over!!";
-  store.winner = store.currentPlayer;
+const showOverPopover = () => {
+  popOverElem.showPopover();
 };
 
-const getElemBoardToRender = (enemy) => {
-  return enemy.type === "computer" ? enemyBoard : realBoard;
+const getElemBoardToRender = (enemy) =>
+  enemy.type === "computer" ? enemyBoard : realBoard;
+
+const getEnemyPlayer = () => {
+  states.currentPlayer === playerOne ? playerTwo : playerOne;
 };
 
-const getEnemyPlayer = () =>
-  store.currentPlayer === playerOne ? playerTwo : playerOne;
+const genRandomInt = (max) => Math.floor(Math.random() * max);
 
 const runPCTurn = () => {
   while (true) {
-    const rx = Math.floor(Math.random() * 10);
-    const ry = Math.floor(Math.random() * 10);
+    const rx = genRandomInt(10);
+    const ry = genRandomInt(10);
 
     if (!checkHasAttackedCoordinateBefore(playerOne, rx, ry)) {
       playTurn(rx, ry);
@@ -69,8 +68,8 @@ const checkHasAttackedCoordinateBefore = (enemyPlayer, x, y) => {
 };
 
 const switchPlayerTurn = () => {
-  store.currentPlayer =
-    store.currentPlayer === playerOne ? playerTwo : playerOne;
+  states.currentPlayer =
+    states.currentPlayer === playerOne ? playerTwo : playerOne;
 };
 
 const renderBoards = () => {
@@ -89,8 +88,34 @@ const renderBoards = () => {
   );
 };
 
+const createShips = () => {
+  const shipInfo = Object.values(Gameboard.VALID_SHIPS);
+  return shipInfo.map(([name, length]) => new Ship(name, length));
+};
+
+const placeShipsAtRandomCoord = (playerBoard) => {
+  const shipObjects = createShips();
+  const DIRECTIONS = ["row", "col"];
+
+  let count = 0;
+  while (count < shipObjects.length) {
+    try {
+      const rx = genRandomInt(10);
+      const ry = genRandomInt(10);
+
+      const randomDirect = DIRECTIONS[genRandomInt(2)];
+      playerBoard.place(shipObjects[count].name, randomDirect, rx, ry);
+    } catch {
+      count--;
+    }
+    count++;
+  }
+};
+
+// EventHandlers
 const handlePlayerClick = (e) => {
-  if (!e.target.hasAttribute("data-cell") || store.gameOver) return;
+  if (!e.target.hasAttribute("data-cell") || !states.start || states.gameOver)
+    return;
 
   const x = +e.target.dataset.x;
   const y = +e.target.dataset.y;
@@ -98,47 +123,41 @@ const handlePlayerClick = (e) => {
   playTurn(x, y);
 };
 
+const handleRandomBtnClick = () => {
+  playerOne.gameboard.clear();
+  playerTwo.gameboard.clear();
+  placeShipsAtRandomCoord(playerOne.gameboard);
+  placeShipsAtRandomCoord(playerTwo.gameboard);
+
+  renderBoards();
+};
+
 //  === MAIN ===
 
 const playerOne = new Player(); // Default is human
 const playerTwo = new Player("computer");
 
-const store = {
+const states = {
   gameOver: false,
+  start: false,
   currentPlayer: playerOne,
   stateMessage: null,
   winner: null,
 };
-
-// List of ship objects
-const ships = Object.fromEntries(
-  Object.values(Gameboard.VALID_SHIPS).map(([name, length]) => [
-    name,
-    new Ship(name, length),
-  ]),
-);
-
-playerOne.gameboard.place(ships.carrier.name, "row", 0, 0);
-playerOne.gameboard.place(ships.battleship.name, "row", 1, 0);
-playerOne.gameboard.place(ships.cruiser.name, "row", 2, 0);
-playerOne.gameboard.place(ships.submarine.name, "row", 3, 0);
-playerOne.gameboard.place(ships.destroyer.name, "row", 4, 0);
-
-playerTwo.gameboard.place(ships.carrier.name, "row", 0, 0);
-playerTwo.gameboard.place(ships.battleship.name, "row", 1, 0);
-playerTwo.gameboard.place(ships.cruiser.name, "row", 2, 0);
-playerTwo.gameboard.place(ships.submarine.name, "row", 3, 0);
-playerTwo.gameboard.place(ships.destroyer.name, "row", 4, 0);
 
 const realBoard = document.querySelector("[data-real-board]");
 const enemyBoard = document.querySelector("[data-enemy-board]");
 const gameStateTextElem = document.querySelector("[data-game-state-text]");
 const realFleetMapElem = document.querySelector("[data-your-fleet-map]");
 const enemyFleetMapElem = document.querySelector("[data-enemy-fleet-map]");
+const popOverElem = document.querySelector("[data-popover]");
+const randomizeBtnElem = document.querySelector("[data-randomize-btn]");
 
 // Initial board rendering
 renderBoards();
 renderMiniGrid(realFleetMapElem, playerOne.gameboard, playerOne.type);
 renderMiniGrid(enemyFleetMapElem, playerTwo.gameboard, playerTwo.type);
 
+// Event Listeners
 enemyBoard.addEventListener("click", handlePlayerClick);
+randomizeBtnElem.addEventListener("click", handleRandomBtnClick);
