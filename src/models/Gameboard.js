@@ -20,7 +20,6 @@ export class Gameboard {
     this.#misses = new Set();
     this.#hits = new Set();
 
-    // Pre creates ships when board is created
     this.ships = Object.fromEntries(
       Object.values(Gameboard.VALID_SHIPS).map(([name, length]) => [
         name,
@@ -31,12 +30,8 @@ export class Gameboard {
 
   createBoard = () => {
     const grid = [];
-
-    // Loop for rows
     for (let i = 0; i < Gameboard.GRID_SIZE; i++) {
       const row = [];
-
-      // Loop for columns
       for (let j = 0; j < Gameboard.GRID_SIZE; j++) {
         row.push([]);
       }
@@ -48,16 +43,63 @@ export class Gameboard {
   place = (name, direction, x, y) => {
     this.#validateShipInfo(name, direction, x, y);
 
-    // Validate ALL coordinates first before touching the board
-    for (let i = 0; i < this.ships[name].length; i++) {
+    const length = this.ships[name].length;
+    if (direction === "row") this.#checkOutOfBounds(x, y + length - 1);
+    if (direction === "col") this.#checkOutOfBounds(x + length - 1, y);
+
+    // Validate all first, then place
+    for (let i = 0; i < length; i++) {
       if (direction === "row") this.#checkOverlap(x, y + i);
       if (direction === "col") this.#checkOverlap(x + i, y);
     }
 
-    // Only place if everything passed
-    for (let i = 0; i < this.ships[name].length; i++) {
+    for (let i = 0; i < length; i++) {
       if (direction === "row") this.#board[x][y + i].push(this.ships[name]);
       if (direction === "col") this.#board[x + i][y].push(this.ships[name]);
+    }
+  };
+
+  // Check if placement is valid without modifying the board
+  canPlace = (name, direction, x, y) => {
+    try {
+      this.#validateShipName(name);
+      this.#validateShipDirection(direction);
+
+      const length = this.ships[name].length;
+
+      for (let i = 0; i < length; i++) {
+        const cx = direction === "col" ? x + i : x;
+        const cy = direction === "row" ? y + i : y;
+
+        if (
+          cx < 0 ||
+          cy < 0 ||
+          cx >= Gameboard.GRID_SIZE ||
+          cy >= Gameboard.GRID_SIZE
+        )
+          return false;
+
+        // Allow overlapping with self (so you can re-place same ship)
+        if (
+          this.#board[cx][cy][0] &&
+          this.#board[cx][cy][0] !== this.ships[name]
+        )
+          return false;
+      }
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  // Remove a ship from the board without resetting hits/misses
+  removeShip = (name) => {
+    for (let i = 0; i < Gameboard.GRID_SIZE; i++) {
+      for (let j = 0; j < Gameboard.GRID_SIZE; j++) {
+        if (this.#board[i][j][0] === this.ships[name]) {
+          this.#board[i][j] = [];
+        }
+      }
     }
   };
 
@@ -65,10 +107,6 @@ export class Gameboard {
     this.#validateShipName(name);
     this.#validateShipDirection(direction);
     this.#checkOutOfBounds(x, y);
-
-    const length = this.ships[name].length;
-    if (direction === "row") this.#checkOutOfBounds(x, y + length - 1);
-    if (direction === "col") this.#checkOutOfBounds(x + length - 1, y);
   };
 
   #validateShipDirection = (direction) => {
@@ -125,6 +163,7 @@ export class Gameboard {
     this.#board = this.createBoard();
     this.#misses = new Set();
     this.#hits = new Set();
+
     this.ships = Object.fromEntries(
       Object.values(Gameboard.VALID_SHIPS).map(([name, length]) => [
         name,
@@ -133,5 +172,3 @@ export class Gameboard {
     );
   };
 }
-
-new Gameboard();

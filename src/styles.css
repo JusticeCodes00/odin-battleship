@@ -97,6 +97,62 @@ body {
   cursor: not-allowed;
 }
 
+.btn-rotate {
+  background-color: #1c71d8;
+  color: #fff;
+  letter-spacing: 1px;
+}
+
+/* ======= LEGEND ======= */
+.legend {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  font-size: 0.85rem;
+  color: var(--color-fade-text);
+}
+
+.legend-title {
+  color: var(--color-base-text);
+  font-weight: bold;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.legend-swatch {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 2px;
+  border: 1px solid #1a5fb4;
+}
+
+.swatch-ship {
+  background: var(--bg-ship-base-gradient);
+}
+.swatch-hit {
+  background: var(--bg-ship-hit-gradient);
+}
+.swatch-miss {
+  background: var(--bg-ship-miss-gradient);
+}
+.swatch-water {
+  background: #1a5fb442;
+  border: 1px solid #1a5fb4;
+}
+
+/* ======= PLACEMENT HINT ======= */
+.placement-hint {
+  font-size: 0.75rem;
+  color: var(--color-fade-text);
+  font-style: italic;
+}
+
 .main {
   display: flex;
   flex-wrap: wrap;
@@ -116,28 +172,57 @@ body {
   }
 }
 
+/* ======= FLEET / MINI GRID ======= */
+details {
+  width: 100%;
+}
+
 .ships-wrapper {
   margin-top: var(--space-sm);
-  padding: var(--space-xms);
+  margin-bottom: var(--space-md);
+  padding: var(--space-sm);
   display: flex;
-  gap: var(--space-xms);
-  rotate: 90deg;
-  scale: -100%;
+  flex-direction: row;
+  gap: var(--space-sm);
   border: 2px dotted #c64600;
   border-radius: 0.5rem;
-  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  max-width: 320px;
 }
 
 .ship-map {
+  display: flex;
+  flex-direction: column;
   border: 1px solid #1c71d8;
+  cursor: grab;
+  touch-action: none;
+  transition:
+    opacity 0.15s ease,
+    outline 0.1s ease;
 }
 
-.ships-wrapper div div {
+.ship-map--placed {
+  opacity: 0;
+  pointer-events: none;
+  cursor: default;
+}
+
+.ship-map:not(.ship-map--placed):hover {
+  outline: 2px solid var(--color-state-game-text);
+  outline-offset: 2px;
+}
+
+.ship-map.is-dragging {
+  opacity: 0.3;
+}
+
+.ship-map div {
   width: 20px;
   height: 20px;
   border: 1px solid #1c71d8;
 }
 
+/* ======= BOARD ======= */
 .board-wrapper {
   display: grid;
   grid-template-columns: 30px 1fr;
@@ -168,14 +253,11 @@ body {
   grid-template-rows: repeat(10, 28px);
 }
 
-.enemy-board .ship {
+/* Hide enemy ships but show them once hit */
+.enemy-board .ship:not(.hit) {
   background: transparent;
 }
-.enemy-board .hit {
-  background: var(--bg-ship-hit-gradient);
-}
 
-/* Faded sections are not interactive */
 .fade {
   opacity: 0.5;
   pointer-events: none;
@@ -200,6 +282,45 @@ body {
   background: var(--bg-ship-miss-gradient);
 }
 
+/* ======= DRAG PLACEMENT HIGHLIGHTS ======= */
+/* Using .board prefix to out-specificity .ship and .miss on the same cell */
+.board .cell.placement-valid {
+  background: rgba(87, 227, 137, 0.5);
+  border-color: #57e389;
+}
+
+.board .cell.placement-invalid {
+  background: rgba(246, 97, 81, 0.5);
+  border-color: #f66151;
+}
+
+/* ======= DRAG CLONE ======= */
+.drag-clone {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
+  display: flex;
+  opacity: 0.85;
+  transform-origin: top left;
+  gap: 1px;
+}
+
+.drag-clone-cell {
+  width: 28px;
+  height: 28px;
+  background: var(--bg-ship-base-gradient);
+  border: 1px solid #1a5fb4;
+  border-radius: 2px;
+}
+
+.drag-clone.col {
+  flex-direction: column;
+}
+.drag-clone.row {
+  flex-direction: row;
+}
+
+/* ======= GAME STATE ======= */
 .game-state {
   box-shadow: 0 0 5px 2px #114c93;
   padding: var(--space-xms) var(--space-sm);
@@ -210,7 +331,7 @@ body {
   }
 }
 
-/* Popover */
+/* ======= POPOVER ======= */
 [popover]:popover-open {
   opacity: 1;
   scale: 1;

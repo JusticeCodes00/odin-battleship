@@ -12,11 +12,31 @@
         <div class="mini-dashboard">
           <div class="game-state">
             Game state:
-            <span data-game-state-text>Randomize your ships to begin</span>
+            <span data-game-state-text
+              >Randomize or drag your ships to begin</span
+            >
           </div>
           <div class="btns">
             <button data-start-btn class="btn" disabled>Start</button>
             <button data-randomize-btn class="btn">Randomize</button>
+            <button data-rotate-btn class="btn btn-rotate">Rotate: ROW</button>
+          </div>
+        </div>
+
+        <!-- Legend -->
+        <div class="legend">
+          <span class="legend-title">Legend:</span>
+          <div class="legend-item">
+            <span class="legend-swatch swatch-ship"></span> Ship
+          </div>
+          <div class="legend-item">
+            <span class="legend-swatch swatch-hit"></span> Hit
+          </div>
+          <div class="legend-item">
+            <span class="legend-swatch swatch-miss"></span> Miss
+          </div>
+          <div class="legend-item">
+            <span class="legend-swatch swatch-water"></span> Water
           </div>
         </div>
       </header>
@@ -24,7 +44,10 @@
       <main class="main">
         <section class="fade">
           <details open>
-            <summary>Your Fleet</summary>
+            <summary>
+              Your Fleet
+              <span class="placement-hint">(drag ships to reposition)</span>
+            </summary>
             <div data-your-fleet-map class="ships-wrapper"></div>
           </details>
           <div class="board-wrapper">
@@ -73,6 +96,7 @@
         </div>
       </main>
 
+      <!-- Drag clone (created dynamically by JS) -->
       <footer class="footer"></footer>
     </div>
   </body>

@@ -2,6 +2,7 @@ import { renderBoard, renderMiniGrid } from "./ui.js";
 import { Gameboard } from "./models/Gameboard.js";
 import { Player } from "./models/Player.js";
 import { Ship } from "./models/Ship.js";
+import interact from "interactjs";
 import eruda from "eruda";
 
 eruda.init();
@@ -48,9 +49,8 @@ const getNextInDirection = (x, y, dx, dy) => {
     nx < 10 &&
     ny < 10 &&
     !checkHasAttackedCoordinateBefore(playerOne, nx, ny)
-  ) {
+  )
     return [nx, ny];
-  }
   return null;
 };
 
@@ -92,7 +92,6 @@ const runPCTurn = () => {
     if (next) {
       [x, y] = next;
     } else {
-      // Reverse direction from firstHit
       const [rdx, rdy] = [-ai.direction[0], -ai.direction[1]];
       const reverse = getNextInDirection(
         ai.firstHit[0],
@@ -120,7 +119,8 @@ const runPCTurn = () => {
     playerOne.gameboard.hits,
     playerOne.gameboard.misses,
   );
-  renderMiniGrid(realMiniGridElem, playerOne.gameboard, playerOne.type);
+  // Game is in progress — pass null so all ships show with hit tracking
+  renderMiniGrid(realMiniGridElem, playerOne.gameboard, playerOne.type, null);
 
   if (result === "hit") {
     setStateMessage("Computer hit your ship!");
@@ -138,14 +138,10 @@ const runPCTurn = () => {
       ai.lastHit = [x, y];
     }
 
-    // If the ship is now sunk, reset AI to hunt for next ship
     const hitShip = playerOne.gameboard.get(x, y);
-    if (hitShip && hitShip.isSunk()) {
-      resetAI();
-    }
+    if (hitShip && hitShip.isSunk()) resetAI();
   } else {
     setStateMessage("Computer missed!");
-
     if (ai.mode === "direction") {
       const [rdx, rdy] = [-ai.direction[0], -ai.direction[1]];
       const reverse = getNextInDirection(
@@ -164,8 +160,181 @@ const runPCTurn = () => {
   }
 
   if (checkWinner()) return;
-
   switchPlayerTurn();
+};
+
+// ======= DRAG AND DROP =======
+
+let dragOrientation = "row";
+let dragClone = null;
+let activeDragShipName = null;
+
+// Tracks which ships have been placed on the board during placement phase
+const placedShips = new Set();
+
+const renderPlayerMiniGrid = () => {
+  // During placement, pass placedShips so placed ships are hidden
+  // During game (states.start === true), pass null so all ships show normally
+  renderMiniGrid(
+    realMiniGridElem,
+    playerOne.gameboard,
+    playerOne.type,
+    states.start ? null : placedShips,
+  );
+};
+
+const getCellFromPoint = (clientX, clientY) => {
+  const rect = realBoard.getBoundingClientRect();
+  if (
+    clientX < rect.left ||
+    clientX > rect.right ||
+    clientY < rect.top ||
+    clientY > rect.bottom
+  )
+    return null;
+
+  const cellW = rect.width / 10;
+  const cellH = rect.height / 10;
+  const x = Math.floor((clientY - rect.top) / cellH);
+  const y = Math.floor((clientX - rect.left) / cellW);
+
+  if (x < 0 || x >= 10 || y < 0 || y >= 10) return null;
+  return { x, y };
+};
+
+const createDragClone = (shipName) => {
+  const length = playerOne.gameboard.ships[shipName].length;
+  dragClone = document.createElement("div");
+  dragClone.classList.add("drag-clone", dragOrientation);
+
+  for (let i = 0; i < length; i++) {
+    const cell = document.createElement("div");
+    cell.classList.add("drag-clone-cell");
+    dragClone.appendChild(cell);
+  }
+  document.body.appendChild(dragClone);
+};
+
+const moveDragClone = (clientX, clientY) => {
+  if (!dragClone) return;
+  dragClone.style.left = `${clientX + 8}px`;
+  dragClone.style.top = `${clientY + 8}px`;
+};
+
+const updateDragCloneOrientation = () => {
+  if (!dragClone) return;
+  dragClone.classList.remove("row", "col");
+  dragClone.classList.add(dragOrientation);
+};
+
+const highlightPlacement = (x, y, shipName) => {
+  clearHighlights();
+  const length = playerOne.gameboard.ships[shipName].length;
+  const valid = playerOne.gameboard.canPlace(shipName, dragOrientation, x, y);
+
+  for (let i = 0; i < length; i++) {
+    const cx = dragOrientation === "col" ? x + i : x;
+    const cy = dragOrientation === "row" ? y + i : y;
+    if (cx >= 10 || cy >= 10) continue;
+    const cell = realBoard.querySelector(`[data-x="${cx}"][data-y="${cy}"]`);
+    if (cell)
+      cell.classList.add(valid ? "placement-valid" : "placement-invalid");
+  }
+};
+
+const clearHighlights = () => {
+  realBoard
+    .querySelectorAll(".placement-valid, .placement-invalid")
+    .forEach((cell) => {
+      cell.classList.remove("placement-valid", "placement-invalid");
+    });
+};
+
+const initDragAndDrop = () => {
+  interact(".ship-map").draggable({
+    listeners: {
+      start(event) {
+        if (states.start) return;
+
+        activeDragShipName = event.target.dataset.name;
+        event.target.classList.add("is-dragging");
+        createDragClone(activeDragShipName);
+        moveDragClone(event.clientX0, event.clientY0);
+      },
+
+      move(event) {
+        if (!activeDragShipName) return;
+        moveDragClone(event.clientX, event.clientY);
+        const cell = getCellFromPoint(event.clientX, event.clientY);
+        if (cell) highlightPlacement(cell.x, cell.y, activeDragShipName);
+        else clearHighlights();
+      },
+
+      end(event) {
+        if (!activeDragShipName) return;
+
+        event.target.classList.remove("is-dragging");
+
+        if (dragClone) {
+          dragClone.remove();
+          dragClone = null;
+        }
+
+        const cell = getCellFromPoint(event.clientX, event.clientY);
+
+        if (
+          cell &&
+          playerOne.gameboard.canPlace(
+            activeDragShipName,
+            dragOrientation,
+            cell.x,
+            cell.y,
+          )
+        ) {
+          playerOne.gameboard.removeShip(activeDragShipName);
+          playerOne.gameboard.place(
+            activeDragShipName,
+            dragOrientation,
+            cell.x,
+            cell.y,
+          );
+
+          // Mark this ship as placed — it disappears from mini grid
+          placedShips.add(activeDragShipName);
+
+          renderBoard(
+            realBoard,
+            playerOne.gameboard.board,
+            playerOne.gameboard.hits,
+            playerOne.gameboard.misses,
+          );
+          renderPlayerMiniGrid();
+
+          // Enable start only when all ships are placed
+          const allShipNames = Object.keys(Gameboard.VALID_SHIPS);
+          const allPlaced = allShipNames.every((name) => placedShips.has(name));
+          startBtnElem.disabled = !allPlaced;
+
+          initDragAndDrop();
+        }
+
+        clearHighlights();
+        activeDragShipName = null;
+      },
+    },
+  });
+};
+
+const toggleOrientation = () => {
+  dragOrientation = dragOrientation === "row" ? "col" : "row";
+  rotateBtnElem.textContent = `Rotate: ${dragOrientation.toUpperCase()}`;
+  updateDragCloneOrientation();
+
+  if (activeDragShipName && dragClone) {
+    const rect = dragClone.getBoundingClientRect();
+    const cell = getCellFromPoint(rect.left, rect.top);
+    if (cell) highlightPlacement(cell.x, cell.y, activeDragShipName);
+  }
 };
 
 // ======= GAME LOGIC =======
@@ -178,13 +347,9 @@ const setStateMessage = (text) => {
 const checkWinner = () => {
   if (playerOne.gameboard.allSunk() || playerTwo.gameboard.allSunk()) {
     states.gameOver = true;
-    const winnerMsg = playerOne.gameboard.allSunk()
-      ? "Computer wins!"
-      : "You win!";
-    setStateMessage(winnerMsg);
-    winnerTextElem.textContent = playerOne.gameboard.allSunk()
-      ? "Computer"
-      : "You";
+    const isComputerWin = playerOne.gameboard.allSunk();
+    setStateMessage(isComputerWin ? "Computer wins!" : "You win!");
+    winnerTextElem.textContent = isComputerWin ? "Computer" : "You";
     randomizeBtnElem.disabled = true;
     showOverPopover();
     return true;
@@ -210,7 +375,8 @@ const playTurn = (x, y) => {
     enemy.gameboard.hits,
     enemy.gameboard.misses,
   );
-  renderMiniGrid(getMiniGridToRender(enemy), enemy.gameboard, enemy.type);
+  // Game is in progress — pass null so all ships show with hit tracking
+  renderMiniGrid(getMiniGridToRender(enemy), enemy.gameboard, enemy.type, null);
 
   setStateMessage(result === "hit" ? "You hit a ship!" : "You missed!");
 
@@ -227,18 +393,12 @@ const showOverPopover = () => {
   popOverElem.showPopover();
 };
 
-const getElemBoardToRender = (enemy) => {
-  return enemy.type === "computer" ? enemyBoard : realBoard;
-};
-
-const getMiniGridToRender = (enemy) => {
-  return enemy.type === "computer" ? enemyMinGridElem : realMiniGridElem;
-};
-
-const getEnemyPlayer = () => {
-  return states.currentPlayer === playerOne ? playerTwo : playerOne;
-};
-
+const getElemBoardToRender = (enemy) =>
+  enemy.type === "computer" ? enemyBoard : realBoard;
+const getMiniGridToRender = (enemy) =>
+  enemy.type === "computer" ? enemyMinGridElem : realMiniGridElem;
+const getEnemyPlayer = () =>
+  states.currentPlayer === playerOne ? playerTwo : playerOne;
 const genRandomInt = (max) => Math.floor(Math.random() * max);
 
 const checkHasAttackedCoordinateBefore = (enemyPlayer, x, y) => {
@@ -277,7 +437,6 @@ const createShips = () => {
 const placeShipsAtRandomCoord = (playerBoard) => {
   const shipObjects = createShips();
   const DIRECTIONS = ["row", "col"];
-
   let count = 0;
   while (count < shipObjects.length) {
     try {
@@ -301,15 +460,22 @@ const resetGame = () => {
   playerTwo.gameboard.clear();
   resetAI();
 
+  // Clear placed ships tracking
+  placedShips.clear();
+
   startBtnElem.disabled = true;
+  randomizeBtnElem.disabled = false;
+  rotateBtnElem.disabled = false;
+
   renderBoards();
-  renderMiniGrid(realMiniGridElem, playerOne.gameboard, playerOne.type);
-  renderMiniGrid(enemyMinGridElem, playerTwo.gameboard, playerTwo.type);
+  renderPlayerMiniGrid();
+  renderMiniGrid(enemyMinGridElem, playerTwo.gameboard, playerTwo.type, null);
 
-  // Fade both sections until game starts
   sections.forEach((s) => s.classList.add("fade"));
+  realBoard.closest("section").classList.remove("fade");
 
-  setStateMessage("Randomize your ships to begin!");
+  setStateMessage("Randomize or drag your ships to begin!");
+  initDragAndDrop();
 };
 
 // ======= EVENT HANDLERS =======
@@ -327,13 +493,17 @@ const handleRandomBtnClick = () => {
   placeShipsAtRandomCoord(playerTwo.gameboard);
   resetAI();
 
-  renderBoards();
-  renderMiniGrid(realMiniGridElem, playerOne.gameboard, playerOne.type);
-  renderMiniGrid(enemyMinGridElem, playerTwo.gameboard, playerTwo.type);
+  // Mark all ships as placed when randomizing
+  placedShips.clear();
+  Object.keys(Gameboard.VALID_SHIPS).forEach((name) => placedShips.add(name));
 
-  // Enable start button once ships are placed
+  renderBoards();
+  renderPlayerMiniGrid(); // All ships hidden from mini grid (all on board)
+  renderMiniGrid(enemyMinGridElem, playerTwo.gameboard, playerTwo.type, null);
+
   startBtnElem.disabled = false;
-  setStateMessage("Ships placed! Press Start when ready.");
+  setStateMessage("Ships placed! Drag to reposition or press Start.");
+  initDragAndDrop();
 };
 
 const handleStartBtnClick = () => {
@@ -343,10 +513,13 @@ const handleStartBtnClick = () => {
   states.gameOver = false;
   states.currentPlayer = playerOne;
 
-  // Remove fade from both sections
   sections.forEach((s) => s.classList.remove("fade"));
 
+  // Re-render mini grid without placedShips filter so all ships show with hit tracking
+  renderPlayerMiniGrid();
+
   startBtnElem.disabled = true;
+  rotateBtnElem.disabled = true;
   setStateMessage("Your turn! Attack the enemy grid.");
 };
 
@@ -355,6 +528,15 @@ const handlePlayAgainClick = () => {
   randomizeBtnElem.disabled = false;
   resetGame();
 };
+
+const handleRotateBtnClick = () => {
+  if (states.start) return;
+  toggleOrientation();
+};
+
+document.addEventListener("keydown", (e) => {
+  if ((e.key === "r" || e.key === "R") && !states.start) toggleOrientation();
+});
 
 // ======= MAIN =======
 
@@ -379,16 +561,23 @@ const randomizeBtnElem = document.querySelector("[data-randomize-btn]");
 const startBtnElem = document.querySelector("[data-start-btn]");
 const playAgainBtnElem = document.querySelector("[data-play-again-btn]");
 const winnerTextElem = document.querySelector("[data-winner-text]");
+const rotateBtnElem = document.querySelector("[data-rotate-btn]");
 const sections = document.querySelectorAll(".main section");
 
 // Initial render
 renderBoards();
-renderMiniGrid(realMiniGridElem, playerOne.gameboard, playerOne.type);
-renderMiniGrid(enemyMinGridElem, playerTwo.gameboard, playerTwo.type);
-setStateMessage("Randomize your ships to begin!");
+renderPlayerMiniGrid();
+renderMiniGrid(enemyMinGridElem, playerTwo.gameboard, playerTwo.type, null);
+setStateMessage("Randomize or drag your ships to begin!");
+
+// Keep your grid visible for drag, fade enemy until game starts
+realBoard.closest("section").classList.remove("fade");
 
 // Event listeners
 enemyBoard.addEventListener("click", handlePlayerClick);
 randomizeBtnElem.addEventListener("click", handleRandomBtnClick);
 startBtnElem.addEventListener("click", handleStartBtnClick);
 playAgainBtnElem.addEventListener("click", handlePlayAgainClick);
+rotateBtnElem.addEventListener("click", handleRotateBtnClick);
+
+initDragAndDrop();
