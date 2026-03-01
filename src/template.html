@@ -12,10 +12,10 @@
         <div class="mini-dashboard">
           <div class="game-state">
             Game state:
-            <span data-game-state-text>Place your ships to begin</span>
+            <span data-game-state-text>Randomize your ships to begin</span>
           </div>
           <div class="btns">
-            <button class="btn">Start</button>
+            <button data-start-btn class="btn" disabled>Start</button>
             <button data-randomize-btn class="btn">Randomize</button>
           </div>
         </div>
@@ -24,85 +24,55 @@
       <main class="main">
         <section class="fade">
           <details open>
-            <summary>Fleet Grid</summary>
+            <summary>Your Fleet</summary>
             <div data-your-fleet-map class="ships-wrapper"></div>
           </details>
           <div class="board-wrapper">
             <div class="label label-cols">
-              <span>A</span>
-              <span>B</span>
-              <span>C</span>
-              <span>D</span>
-              <span>E</span>
-              <span>F</span>
-              <span>G</span>
-              <span>H</span>
-              <span>I</span>
-              <span>J</span>
+              <span>A</span><span>B</span><span>C</span><span>D</span
+              ><span>E</span> <span>F</span><span>G</span><span>H</span
+              ><span>I</span><span>J</span>
             </div>
-
             <div class="label label-rows">
-              <span>1</span>
-              <span>2</span>
-              <span>3</span>
-              <span>4</span>
-              <span>5</span>
-              <span>6</span>
-              <span>7</span>
-              <span>8</span>
-              <span>9</span>
-              <span>10</span>
+              <span>1</span><span>2</span><span>3</span><span>4</span
+              ><span>5</span> <span>6</span><span>7</span><span>8</span
+              ><span>9</span><span>10</span>
             </div>
-
             <div data-real-board class="board real-board"></div>
           </div>
-
           <p>Your Grid</p>
         </section>
 
-        <section>
+        <section class="fade">
           <details open>
-            <summary>Fleet Grid</summary>
+            <summary>Enemy Fleet</summary>
             <div data-enemy-fleet-map class="ships-wrapper"></div>
           </details>
-
           <div class="board-wrapper">
             <div class="label label-cols">
-              <span>A</span>
-              <span>B</span>
-              <span>C</span>
-              <span>D</span>
-              <span>E</span>
-              <span>F</span>
-              <span>G</span>
-              <span>H</span>
-              <span>I</span>
-              <span>J</span>
+              <span>A</span><span>B</span><span>C</span><span>D</span
+              ><span>E</span> <span>F</span><span>G</span><span>H</span
+              ><span>I</span><span>J</span>
             </div>
-
             <div class="label label-rows">
-              <span>1</span>
-              <span>2</span>
-              <span>3</span>
-              <span>4</span>
-              <span>5</span>
-              <span>6</span>
-              <span>7</span>
-              <span>8</span>
-              <span>9</span>
-              <span>10</span>
+              <span>1</span><span>2</span><span>3</span><span>4</span
+              ><span>5</span> <span>6</span><span>7</span><span>8</span
+              ><span>9</span><span>10</span>
             </div>
-
             <div data-enemy-board class="board enemy-board"></div>
           </div>
-
           <p>Opponent's Grid</p>
         </section>
-        <div data-popover class="popover" popover="auto">
+
+        <div data-popover class="popover" popover="manual">
           <h2>Game Over</h2>
-          <p>Winner: <span></span></p>
+          <p>Winner: <span data-winner-text></span></p>
+          <button data-play-again-btn class="btn play-again-btn">
+            Play Again
+          </button>
         </div>
       </main>
+
       <footer class="footer"></footer>
     </div>
   </body>

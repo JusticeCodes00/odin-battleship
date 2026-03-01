@@ -33,8 +33,6 @@ export const renderMiniGrid = (elem, board, playerType) => {
 
       if (ship.length > i) innerDiv.classList.add("ship");
 
-      // If (playerType === "computer") innerDiv.classList.remove("ship");
-
       shipElem.appendChild(innerDiv);
     }
     elem.appendChild(shipElem);
